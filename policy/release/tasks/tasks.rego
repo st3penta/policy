@@ -129,7 +129,7 @@ deny contains result if {
 deny contains result if {
 	some att in lib.pipelinerun_attestations
 	some task in tekton.tasks(att)
-	some status in _status(task)
+	status := object.get(task, "status", "MISSING")
 	status != "Succeeded"
 	result := lib.result_helper_with_term(
 		rego.metadata.chain(),
@@ -375,36 +375,6 @@ required_pipeline_task_data := task_data if {
 	some att in lib.pipelinerun_attestations
 	count(tekton.tasks(att)) > 0
 	task_data := tekton.required_task_list(att)
-}
-
-_status(task) := status if {
-	# Handle SLSA Provenance v0.2
-	task.status
-	not task.status.conditions
-	status := [s |
-		s := task.status
-	]
-} else := status if {
-	# Handle SLSA Provenance v1.0
-	task.status.conditions
-	status := [s |
-		some condition in task.status.conditions
-		condition.type == "Succeeded"
-		s := _slsav1_status(condition)
-	]
-
-	# if task.status.conditions = [], we want ["MISSING"] returned
-	count(status) > 0
-} else := ["MISSING"]
-
-_slsav1_status(condition) := status if {
-	condition.status == "True"
-	status := "Succeeded"
-}
-
-_slsav1_status(condition) := status if {
-	condition.status == "False"
-	status := "Failed"
 }
 
 # given an array a nice message saying one of the elements of the array,

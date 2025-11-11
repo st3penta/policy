@@ -25,6 +25,7 @@ test_buildah_tasks if {
 			{"name": "DOCKERFILE", "value": "./image_with_labels/Dockerfile"},
 		],
 		"results": _results,
+		"status": "Succeeded",
 		"taskRef": {
 			"params": [{"name": "name", "value": "buildah"}, {"name": "bundle", "value": "buildah-bundle"}, {"name": "kind", "value": "task"}], # regal ignore:line-length
 			"resolver": "bundles",
@@ -433,5 +434,9 @@ _slsav1_byproducts := [
 	{
 		"name": "taskRunResults/buildah/IMAGE_URL",
 		"content": base64.encode("quay.io/jstuart/hacbs-docker-build:tag@sha256:hash"),
+	},
+	{
+		"name": "taskRunStatus/buildah",
+		"content": base64.encode(json.marshal({"status": "Succeeded"})),
 	},
 ]

@@ -52,41 +52,40 @@ test_failed_tasks if {
 	}}}]
 
 	slsav1_tasks := [
-		json.patch(tekton_test.slsav1_task("buildah"), [{
-			"op": "add",
-			"path": "/spec/taskRef/bundle",
-			"value": _bundle,
-		}]),
-		json.patch(tekton_test.slsav1_task("av-scanner"), [
-			{
-				"op": "replace",
-				"path": "/status/conditions",
-				"value": [{"type": "Succeeded", "status": "False"}],
-			},
-			{
-				"op": "add",
-				"path": "/spec/taskRef/bundle",
-				"value": _bundle,
-			},
-		]),
-		json.patch(tekton_test.slsav1_task("cve-scanner"), [
-			{
-				"op": "replace",
-				"path": "/status/conditions",
-				"value": [],
-			},
-			{
-				"op": "add",
-				"path": "/spec/taskRef/bundle",
-				"value": _bundle,
-			},
-		]),
+		tekton_test.slsav1_task_bundle("buildah", _bundle),
+		tekton_test.slsav1_task_bundle("av-scanner", _bundle),
+		tekton_test.slsav1_task_bundle("cve-scanner", _bundle),
 	]
+
+	# Create byproducts with task status information
+	slsav1_byproducts := [
+		{
+			"name": "taskRunStatus/buildah",
+			"content": base64.encode(json.marshal({"status": "Succeeded"})),
+		},
+		{
+			"name": "taskRunStatus/av-scanner",
+			"content": base64.encode(json.marshal({"status": "Failed"})),
+		},
+	]
+
+	slsav1_attestation := json.patch(
+		tekton_test.slsav1_attestation_with_params_and_byproducts(
+			slsav1_tasks,
+			[],
+			slsav1_byproducts,
+		),
+		[{
+			"op": "add",
+			"path": "/statement/predicate/buildDefinition/internalParameters",
+			"value": {"labels": {"pipelines.openshift.io/runtime": "generic"}},
+		}],
+	)
 
 	lib.assert_equal_results(
 		tasks.deny,
 		expected,
-	) with input.attestations as _slsav1_attestations_with_tasks([], slsav1_tasks)
+	) with input.attestations as [slsav1_attestation]
 }
 
 test_required_tasks_met if {
@@ -337,40 +336,6 @@ test_missing_required_pipeline_data if {
 	# we use _slsav02_expected_required_tasks as rule data because it fits the rule data format
 	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
 		with input.attestations as slsav1_attestations
-}
-
-test_multiple_conditions_in_status if {
-	conditions := [
-		{
-			"type": "Succeeded",
-			"status": "True",
-		},
-		{
-			"type": "Succeeded",
-			"status": "False",
-		},
-		{"type": "invalid"},
-	]
-	slsav1_task := json.patch(tekton_test.slsav1_task("buildah"), [{
-		"op": "replace",
-		"path": "/status/conditions",
-		"value": conditions,
-	}])
-
-	lib.assert_equal(["Succeeded", "Failed"], tasks._status(slsav1_task))
-}
-
-test_invalid_status_conditions if {
-	conditions := []
-	slsav1_task1 := json.patch(tekton_test.slsav1_task("buildah"), [{
-		"op": "replace",
-		"path": "/status/conditions",
-		"value": conditions,
-	}])
-	lib.assert_equal(["MISSING"], tasks._status(slsav1_task1))
-
-	given_task := json.remove(_task("buildah"), ["/status"])
-	lib.assert_equal(["MISSING"], tasks._status(given_task))
 }
 
 test_one_of_required_tasks if {

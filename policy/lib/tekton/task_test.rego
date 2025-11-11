@@ -755,6 +755,7 @@ resolved_slsav1_task(name, resolved_params, resolved_results) := {
 	"name": name,
 	"params": resolved_params,
 	"results": resolved_results,
+	"status": "Succeeded",
 	"taskRef": {
 		"params": [
 			{

@@ -42,13 +42,17 @@ _slsa_task(task, attestation) := complete_task if {
 
 	task_params := _slsav1_task_params(task, attestation)
 	task_results := _slsav1_task_results(task, attestation)
+	task_status := _slsav1_task_status(task, attestation)
 
 	complete_task := object.union(
 		task,
-		{
-			"params": task_params,
-			"results": task_results,
-		},
+		object.union(
+			{
+				"params": task_params,
+				"results": task_results,
+			},
+			task_status,
+		),
 	)
 }
 
@@ -339,6 +343,25 @@ _resolve_param_value(value, attestation) := resolved if {
 	resolved := base64.decode(byproduct.content)
 } else := value
 
-# No template - return value as-is
+_slsav1_task_status(task, attestation) := {"status": status} if {
+	_slsav1_byproducts(attestation)
+
+	# Get the pipeline task name for this task (same as used for results)
+	task_name := pipeline_task_name(task)
+
+	# Look for the byproduct with name "taskRunStatus/<task_name>"
+	byproduct_name := sprintf("taskRunStatus/%s", [task_name])
+	some byproduct in _slsav1_byproducts(attestation)
+	byproduct.name == byproduct_name
+
+	# Decode the base64 content
+	decoded_content := base64.decode(byproduct.content)
+
+	# Parse the JSON content
+	status_obj := json.unmarshal(decoded_content)
+
+	# Extract the status value
+	status := status_obj.status
+} else := {}
 
 _slsav1_byproducts(attestation) := attestation.statement.predicate.runDetails.byproducts

@@ -107,15 +107,37 @@ att_mock_task_helper(task) := [{"statement": {"predicate": {
 }}}]
 
 test_tasks_from_pipelinerun if {
-	slsa1_task := tekton_test.slsav1_task("buildah")
-	slsa1_att := tekton_test.slsav1_attestation([slsa1_task])
-	resolved_task := tekton_test.resolved_slsav1_task("buildah", [], [])
-	lib.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
-
 	slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
 	slsa02_att := att_mock_task_helper(slsa02_task)
 	resolved_slsa02_task := {"name": "my-task", "ref": {"kind": "task"}, "params": [], "results": []}
 	lib.assert_equal([resolved_slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
+
+	slsa1_task := tekton_test.slsav1_task("buildah")
+	slsa1_att := tekton_test.slsav1_attestation_with_params_and_byproducts(
+		[slsa1_task], [],
+		[{
+			"content": base64.encode(`{"status": "Succeeded"}`),
+			"mediaType": "application/json",
+			"name": "taskRunStatus/buildah",
+		}],
+	)
+	resolved_task := tekton_test.resolved_slsav1_task("buildah", [], [])
+	lib.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
+
+	slsa1_failing_task := tekton_test.slsav1_task("buildah")
+	slsa1_failing_att := tekton_test.slsav1_attestation_with_params_and_byproducts(
+		[slsa1_task], [],
+		[{
+			"content": base64.encode(`{"status": "Failed"}`),
+			"mediaType": "application/json",
+			"name": "taskRunStatus/buildah",
+		}],
+	)
+	resolved_failing_task := object.union(
+		tekton_test.resolved_slsav1_task("buildah", [], []),
+		{"status": "Failed"},
+	)
+	lib.assert_equal([resolved_failing_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_failing_att]
 }
 
 test_slsa_provenance_attestations if {

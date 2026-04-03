@@ -22,6 +22,7 @@ tekton_slsav1_pipeline_run := "https://tekton.dev/chains/v2/slsa-tekton"
 slsav1_pipelinerun_att_build_types := {
 	"https://tekton.dev/chains/v2/slsa",
 	tekton_slsav1_pipeline_run,
+	"https://project-ncl.github.io/slsa-pnc-cli-buildtypes/workflow/v1",
 }
 
 tekton_task_run := "tekton.dev/v1/TaskRun"
@@ -113,15 +114,29 @@ pipelinerun_slsa_provenance_v1 := [att |
 	some att in input.attestations
 	att.statement.predicateType == slsa_provenance_predicate_type_v1
 
-	att.statement.predicate.buildDefinition.buildType in slsav1_pipelinerun_att_build_types
+	build_type := att.statement.predicate.buildDefinition.buildType
+	build_type in slsav1_pipelinerun_att_build_types
 
-	# TODO: Workaround to distinguish between taskrun and pipelinerun attestations
-	spec_keys := object.keys(att.statement.predicate.buildDefinition.externalParameters.runSpec)
-
-	pipeline_keys := {"pipelineRef", "pipelineSpec"}
-
-	count(pipeline_keys - spec_keys) != count(pipeline_keys)
+	# Workaround to distinguish between taskrun and pipelinerun attestations.
+	# Only applies to Tekton build types that have a runSpec field.
+	_is_pipelinerun_or_non_tekton(build_type, att)
 ]
+
+_is_pipelinerun_or_non_tekton(build_type, _) if {
+	not build_type in slsav1_tekton_build_types
+}
+
+_is_pipelinerun_or_non_tekton(build_type, att) if {
+	build_type in slsav1_tekton_build_types
+	spec_keys := object.keys(att.statement.predicate.buildDefinition.externalParameters.runSpec)
+	pipeline_keys := {"pipelineRef", "pipelineSpec"}
+	count(pipeline_keys - spec_keys) != count(pipeline_keys)
+}
+
+slsav1_tekton_build_types := {
+	"https://tekton.dev/chains/v2/slsa",
+	tekton_slsav1_pipeline_run,
+}
 
 # These ones we don't care about any more
 taskrun_attestations := [att |

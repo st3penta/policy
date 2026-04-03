@@ -140,6 +140,16 @@ defaults := {
 	"volatile_config_warning_threshold_days": 30,
 	# The gpg-pubkey RPM does not abide to the rule of a single RPM name being installed.
 	"non_unique_rpm_names": ["gpg-pubkey"],
+	#
+	# Used in release/lib/attestations.rego
+	# Allowed provenance buildTypes for PipelineRun attestations (both SLSA v0.2 and v1)
+	"allowed_provenance_build_types": [
+		"tekton.dev/v1/PipelineRun",
+		"tekton.dev/v1beta1/PipelineRun",
+		"https://tekton.dev/attestations/chains/pipelinerun@v2",
+		"https://tekton.dev/chains/v2/slsa",
+		"https://tekton.dev/chains/v2/slsa-tekton",
+	],
 }
 
 # Returns the "first found" of the following:

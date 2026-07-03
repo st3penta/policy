@@ -62,6 +62,7 @@ _test_list(predicate, key) := result if {
 #     failed tests listed in the attestation predicate.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -90,6 +91,7 @@ deny contains result if {
 #     Valid values are PASSED, WARNED, and FAILED.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -117,6 +119,7 @@ deny contains result if {
 #     with a value of PASSED, WARNED, or FAILED.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

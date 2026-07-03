@@ -49,6 +49,7 @@ _manifests := ec.oci.image_manifests(lib.pipelinerun_bundle_refs)
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -128,6 +129,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - slsa3
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -155,6 +157,7 @@ deny contains result if {
 #     is contained as xref:cli:ROOT:configuration.adoc#_data_sources[data] under the key 'required-tasks'.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -183,6 +186,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -222,6 +226,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -244,6 +249,7 @@ deny contains result if {
 #     resolver is used, use a commit ID instead of a branch name.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -271,6 +277,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - tasks.pipeline_has_tasks
 #
@@ -310,6 +317,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _data_errors
